@@ -8,12 +8,23 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.example.mobileuploadapirest.remote.ApiUtil;
+import com.example.mobileuploadapirest.remote.ImageInterface;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private Button button;
 
+    ImageInterface imageInterface;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         editText = findViewById(R.id.editText);
         button = findViewById(R.id.button);
 
+        imageInterface = ApiUtil.uploadImage();
 
         button.setOnClickListener(view ->{
 
@@ -77,13 +90,47 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d("imagem", "onActivityResult: imagem alterada");
 
-                } catch (IOException e) {
+                    uploadImageRetroFit(bitmap);
+                }
+
+                catch (IOException e) {
                     e.printStackTrace();
                     Log.d("imagem", e.getMessage());
                 }
             }
         }
+    }// fim do matodo do on activity result
+
+
+    private void uploadImageRetroFit(Bitmap bitmap) {
+
+        ByteArrayOutputStream byteArrayInputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat. JPEG, 100, byteArrayInputStream);
+
+        String file = Base64.encodeToString(byteArrayInputStream.toByteArray(), Base64.DEFAULT);
+
+        String titulo = editText.getText().toString();
+
+        Call<String> upload =  imageInterface.uploadImage(file, titulo);
+        upload.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response.isSuccessful()){
+                    Toast.makeText(MainActivity.this, "Foi vei hehe", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("testeErro", "onFailure: " + t);
+
+            }
+        });
+
+
+
     }
+
 
     //    public void openGalery(){
 //
